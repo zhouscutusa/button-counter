@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>按钮计数器 · ✅/❌ 可视化</title>
+<style>
+  :root { --gap: 10px; --btn-size: 56px; --radius: 12px; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; 
+         margin: 0; padding: 16px; background:#0b0c10; color:#eef2f7; }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+  .wrap { display:grid; gap: var(--gap); grid-template-columns: 1fr; max-width:880px; margin:0 auto; }
+  @media (min-width: 820px) {
+    .wrap { grid-template-columns: 1.2fr 1fr; align-items: start; }
+  }
+
+  .card { background:#151823; border:1px solid #252a36; border-radius: 14px; padding: 14px; }
+  .row { display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; }
+  .grid {
+    display:grid; gap: var(--gap);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  button.num {
+    height: var(--btn-size);
+    border-radius: var(--radius);
+    border: 1px solid #2a3143;
+    background: linear-gradient(180deg,#1b2131,#121726);
+    color:#e8eef7; font-size:18px; font-weight:600;
+    cursor:pointer; position:relative;
+    transition: transform .05s ease, border-color .15s ease, background .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button.num:active { transform: translateY(1px) scale(0.98); }
+  button.num:hover { border-color:#3a465f; }
+  button.num .badge {
+    position:absolute; top:-6px; right:-6px; min-width:24px; height:24px;
+    border-radius: 999px; background:#2a8852; color:white;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 6px; font-size:12px; font-weight:700; border:1px solid #133e29;
+  }
+  button.num.zero .badge { background:#6b7280; border-color:#2e3137; } /* 0 次时灰色 */
+
+  .toolbar { display:flex; gap:var(--gap); flex-wrap:wrap; margin-bottom: 8px; }
+  .btn {
+    height: 40px; padding: 0 14px; border-radius: 10px; border:1px solid #2a3143;
+    background:#121726; color:#e8eef7; cursor:pointer; font-weight:600;
+  }
+  .btn:hover { border-color:#3a465f; }
+  .btn--danger { background:#2a171a; border-color:#552328; color:#ffdee2; }
+  .btn--danger:hover { border-color:#7a3239; }
+
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .list { line-height: 1.7; font-size: 15px; white-space: pre-wrap; }
+  .muted { color:#aab3c2; font-size:13px; }
+  .pill {
+    display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #2a3143;
+    background:#0f1424; margin:2px 6px 2px 0; font-size:13px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h1>请选择（点一下=+1）</h1>
+      <div class="toolbar">
+        <button id="resetBtn" class="btn btn--danger">清空</button>
+        <span class="muted">提示：点按钮会累计次数；次数徽章在按钮右上角。</span>
+      </div>
+      <div id="btnGrid" class="grid"></div>
+    </section>
+
+    <section class="card">
+      <h1>结果</h1>
+      <div class="row">
+        <div><span class="pill">✅ = 点过的次数（重复显示）</span><span class="pill">❌ = 从未点击</span></div>
+      </div>
+      <h3 class="muted" style="margin:10px 0 4px;">可视化计数</h3>
+      <div id="visual" class="list mono">（尚无数据）</div>
+      <h3 class="muted" style="margin:14px 0 4px;">未点的按钮</h3>
+      <div id="unpicked" class="list mono">（全部已点或尚无数据）</div>
+    </section>
+  </div>
+
+<script>
+/** ====== 配置：这里可以改成任意 10 个标签 ====== */
+const labels = ['1','2','3','4','5','6','7','8','9','10']; // 想用中文也行：['红','橙','黄',...]
+/** ============================================== */
+
+const btnGrid = document.getElementById('btnGrid');
+const visual  = document.getElementById('visual');
+const unpicked= document.getElementById('unpicked');
+const resetBtn= document.getElementById('resetBtn');
+
+const counts = Object.fromEntries(labels.map(l => [l, 0]));
+
+function renderButtons(){
+  btnGrid.innerHTML = '';
+  labels.forEach(label => {
+    const btn = document.createElement('button');
+    btn.className = 'num';
+    btn.textContent = label;
+
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = counts[label];
+    if (counts[label] === 0) btn.classList.add('zero');
+    btn.appendChild(badge);
+
+    btn.addEventListener('click', () => {
+      counts[label] += 1;
+      updateUI();
+    });
+    btnGrid.appendChild(btn);
+  });
+}
+
+function renderResults(){
+  // ✅/❌ 可视化
+  const lines = labels.map(l => {
+    const n = counts[l];
+    const marks = n > 0 ? '✅'.repeat(n) : '❌';
+    return `${l} → ${marks}`;
+  });
+  visual.textContent = lines.join('\n');
+
+  // 未点列表
+  const none = labels.filter(l => counts[l] === 0);
+  unpicked.textContent = none.length ? none.join(', ') : '（无：都被点过了）';
+}
+
+function updateUI(){
+  // 更新按钮徽章 & 颜色
+  Array.from(btnGrid.children).forEach((btn, idx) => {
+    const label = labels[idx];
+    const badge = btn.querySelector('.badge');
+    badge.textContent = counts[label];
+    btn.classList.toggle('zero', counts[label] === 0);
+  });
+  renderResults();
+}
+
+resetBtn.addEventListener('click', () => {
+  Object.keys(counts).forEach(k => counts[k] = 0);
+  updateUI();
+});
+
+renderButtons();
+renderResults();
+</script>
+</body>
+</html>
