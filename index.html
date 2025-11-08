@@ -66,31 +66,34 @@
   <div class="wrap">
     <section class="card">
       <h1>请选择（点一下=+1）</h1>
-<div class="toolbar" style="align-items:center;">
-  <!-- 范围输入框 -->
-  <input
-    id="rangeStart"
-    type="text"
-    maxlength="3"
-    placeholder=""
-    style="font-size:20px;text-align:center;width:70px;border-radius:8px;
-           border:2px solid #2a3143;background:#0f1424;color:#e8eef7;outline:none;"
-  >
-  <span style="font-size:20px;margin:0 4px;">-</span>
-  <input
-    id="rangeEnd"
-    type="text"
-    maxlength="3"
-    placeholder=""
-    style="font-size:20px;text-align:center;width:70px;border-radius:8px;
-           border:2px solid #2a3143;background:#0f1424;color:#e8eef7;outline:none;"
-  >
+<div class="toolbar" style="align-items:center; flex-direction:column; gap:6px; align-items:flex-start;">
+  <!-- 第一行：范围输入框 -->
+  <div class="row" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+    <input
+      id="rangeStart"
+      type="text"
+      maxlength="3"
+      placeholder=""
+      style="font-size:20px;text-align:center;width:70px;border-radius:8px;
+             border:2px solid #2a3143;background:#0f1424;color:#e8eef7;outline:none;"
+    >
+    <span style="font-size:20px;margin:0 4px;">-</span>
+    <input
+      id="rangeEnd"
+      type="text"
+      maxlength="3"
+      placeholder=""
+      style="font-size:20px;text-align:center;width:70px;border-radius:8px;
+             border:2px solid #2a3143;background:#0f1424;color:#e8eef7;outline:none;"
+    >
+  </div>
 
-  <!-- 清空与下一批按钮 -->
-  <button id="resetBtn" class="btn btn--danger" style="margin-left:8px;">清空</button>
-  <button id="nextBtn" class="btn" style="margin-left:6px;">下一批</button>
-
-  <span class="muted">提示：点按钮会累计次数；次数徽章在按钮右上角。</span>
+  <!-- 第二行：按钮 -->
+  <div class="row" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+    <button id="resetBtn" class="btn btn--danger">清空</button>
+    <button id="nextBtn" class="btn">下一批</button>
+    <span class="muted">提示：点按钮会累计次数；次数徽章在按钮右上角。</span>
+  </div>
 </div>
       <div id="btnGrid" class="grid"></div>
       <!-- 新增的大数字输入框 -->
