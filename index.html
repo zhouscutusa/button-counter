@@ -66,10 +66,32 @@
   <div class="wrap">
     <section class="card">
       <h1>请选择（点一下=+1）</h1>
-      <div class="toolbar">
-        <button id="resetBtn" class="btn btn--danger">清空</button>
-        <span class="muted">提示：点按钮会累计次数；次数徽章在按钮右上角。</span>
-      </div>
+<div class="toolbar" style="align-items:center;">
+  <!-- 范围输入框 -->
+  <input
+    id="rangeStart"
+    type="text"
+    maxlength="3"
+    placeholder=""
+    style="font-size:20px;text-align:center;width:70px;border-radius:8px;
+           border:2px solid #2a3143;background:#0f1424;color:#e8eef7;outline:none;"
+  >
+  <span style="font-size:20px;margin:0 4px;">-</span>
+  <input
+    id="rangeEnd"
+    type="text"
+    maxlength="3"
+    placeholder=""
+    style="font-size:20px;text-align:center;width:70px;border-radius:8px;
+           border:2px solid #2a3143;background:#0f1424;color:#e8eef7;outline:none;"
+  >
+
+  <!-- 清空与下一批按钮 -->
+  <button id="resetBtn" class="btn btn--danger" style="margin-left:8px;">清空</button>
+  <button id="nextBtn" class="btn" style="margin-left:6px;">下一批</button>
+
+  <span class="muted">提示：点按钮会累计次数；次数徽章在按钮右上角。</span>
+</div>
       <div id="btnGrid" class="grid"></div>
       <!-- 新增的大数字输入框 -->
       <div style="margin-top:20px; text-align:center;">
@@ -97,23 +119,30 @@
   </div>
 
 <script>
-/** ====== 配置：这里可以改成任意 10 个标签 ====== */
+/** ====== 配置：九宫格标签 ====== */
 const labels = [
   '1','2','3',
   '4','5','6',
   '7','8','9',
   '*','0','#'
-]; // 想用中文也行：['红','橙','黄',...]
+];
 /** ============================================== */
 
 const btnGrid = document.getElementById('btnGrid');
 const visual  = document.getElementById('visual');
 const unpicked= document.getElementById('unpicked');
 const resetBtn= document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+// === 获取或创建输入框元素 ===
+const inputBox = document.getElementById('bigNumber') || document.querySelector('#bigNumber');
+if (!inputBox) {
+  console.warn('未找到 bigNumber 输入框，请确保 HTML 中已有该元素');
+}
 
 const counts = Object.fromEntries(labels.map(l => [l, 0]));
 
-function renderButtons(){
+function renderButtons() {
   btnGrid.innerHTML = '';
   labels.forEach(label => {
     const btn = document.createElement('button');
@@ -134,8 +163,7 @@ function renderButtons(){
   });
 }
 
-function renderResults(){
-  // ✅/❌ 可视化
+function renderResults() {
   const lines = labels.map(l => {
     const n = counts[l];
     const marks = n > 0 ? '✅'.repeat(n) : '❌';
@@ -143,13 +171,11 @@ function renderResults(){
   });
   visual.textContent = lines.join('\n');
 
-  // 未点列表
   const none = labels.filter(l => counts[l] === 0);
   unpicked.textContent = none.length ? none.join(', ') : '（无：都被点过了）';
 }
 
-function updateUI(){
-  // 更新按钮徽章 & 颜色
+function updateUI() {
   Array.from(btnGrid.children).forEach((btn, idx) => {
     const label = labels[idx];
     const badge = btn.querySelector('.badge');
@@ -159,8 +185,58 @@ function updateUI(){
   renderResults();
 }
 
+// === 清空按钮：重置计数 + 清空三位数字 ===
 resetBtn.addEventListener('click', () => {
+  // 1. 清空所有按钮计数
   Object.keys(counts).forEach(k => counts[k] = 0);
+
+  // 2. 获取范围输入框
+  const r1 = document.getElementById('rangeStart'); // 起始值
+  const r2 = document.getElementById('rangeEnd');   // 结束值
+
+  // 3. 设置大数字框为起始值（若为空则置空）
+  if (inputBox) {
+    const startVal = (r1 && r1.value.trim() !== '') ? r1.value.trim() : '';
+    inputBox.value = startVal;
+  }
+
+  // 4. 不清空范围输入框，保留用户填写的范围
+  updateUI();
+});
+
+// === “下一批”：清空计数 + 根据范围循环 ===
+nextBtn.addEventListener('click', () => {
+  // 清空所有按钮次数
+  Object.keys(counts).forEach(k => counts[k] = 0);
+
+  const r1 = document.getElementById('rangeStart');
+  const r2 = document.getElementById('rangeEnd');
+  let startVal = parseInt(r1?.value || '', 10);
+  let endVal   = parseInt(r2?.value || '', 10);
+  let current  = parseInt(inputBox?.value || '0', 10);
+
+  // 处理非法或空值
+  if (isNaN(current)) current = 0;
+  const hasRange = !isNaN(startVal) && !isNaN(endVal);
+  const hasStartOnly = !isNaN(startVal) && isNaN(endVal);
+
+  let next;
+
+  if (hasRange) {
+    // 范围循环
+    if (current < startVal || current > endVal) next = startVal;
+    else next = (current + 1 > endVal) ? startVal : current + 1;
+  } else if (hasStartOnly) {
+    // 只有起始值时，从起始开始递增
+    next = (current < startVal) ? startVal : (current + 1) % 1000;
+  } else {
+    // 都没填：按旧逻辑 +1 循环 000~999
+    next = (current + 1) % 1000;
+  }
+
+  if (inputBox)
+    inputBox.value = next.toString().padStart(3, '0');
+
   updateUI();
 });
 
