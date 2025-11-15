@@ -90,7 +90,8 @@
 
   <!-- 第二行：按钮 -->
   <div class="row" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-    <button id="resetBtn" class="btn btn--danger">清空</button>
+    <button id="initBtn" class="btn btn--danger">初始化</button>
+    <button id="resetBatchBtn" class="btn">重置本批</button>
     <button id="nextBtn" class="btn">下一批</button>
     <span class="muted">提示：点按钮会累计次数；次数徽章在按钮右上角。</span>
   </div>
@@ -134,7 +135,8 @@ const labels = [
 const btnGrid = document.getElementById('btnGrid');
 const visual  = document.getElementById('visual');
 const unpicked= document.getElementById('unpicked');
-const resetBtn= document.getElementById('resetBtn');
+const initBtn = document.getElementById('initBtn');
+const resetBatchBtn = document.getElementById('resetBatchBtn');
 const nextBtn = document.getElementById('nextBtn');
 
 // === 获取或创建输入框元素 ===
@@ -188,22 +190,25 @@ function updateUI() {
   renderResults();
 }
 
-// === 清空按钮：重置计数 + 清空三位数字 ===
-resetBtn.addEventListener('click', () => {
-  // 1. 清空所有按钮计数
+// === “初始化”：清空所有计数 + 大数字设为范围起始值 ===
+initBtn.addEventListener('click', () => {
+  // 清空数字键盘计数
   Object.keys(counts).forEach(k => counts[k] = 0);
 
-  // 2. 获取范围输入框
-  const r1 = document.getElementById('rangeStart'); // 起始值
-  const r2 = document.getElementById('rangeEnd');   // 结束值
+  const r1 = document.getElementById('rangeStart');
 
-  // 3. 设置大数字框为起始值（若为空则置空）
+  // 设定 bigNumber = 范围起始值（为空则置空）
   if (inputBox) {
     const startVal = (r1 && r1.value.trim() !== '') ? r1.value.trim() : '';
     inputBox.value = startVal;
   }
 
-  // 4. 不清空范围输入框，保留用户填写的范围
+  updateUI();
+});
+
+// === “重置本批”：只清空数字键盘计数，不动大数字 ===
+resetBatchBtn.addEventListener('click', () => {
+  Object.keys(counts).forEach(k => counts[k] = 0);
   updateUI();
 });
 
